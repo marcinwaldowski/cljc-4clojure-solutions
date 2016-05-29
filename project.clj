@@ -4,4 +4,7 @@
   :license {:name "Eclipse Public License"
             :url "http://www.eclipse.org/legal/epl-v10.html"}
 
+  ;; Required support for reader conditional files (cljc)
+  :min-lein-version "2.5.2"
+
   :dependencies [[org.clojure/clojure "1.8.0"]])
