@@ -9,4 +9,9 @@ pom.xml.asc
 /.nrepl-port
 .hgignore
 .hg/
+/resources/private/js
+/out
 /.project
+/nashorn_code_cache
+/.cljs_node_repl
+/.cljs_rhino_repl
