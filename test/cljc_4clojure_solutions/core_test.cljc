@@ -1,5 +1,6 @@
 (ns cljc-4clojure-solutions.core-test
-  (:require [clojure.test :refer [deftest testing is]]
+  (:require #?(:clj  [clojure.test :refer [deftest testing is]]
+               :cljs [cljs.test :refer-macros [deftest testing is]])
             [cljc-4clojure-solutions.core :as c]))
 
 (deftest elementary-01
@@ -367,8 +368,10 @@
   (testing "Group a Sequence"
     (is (= (c/my-group-by #(> % 5) [1 3 6 8])
            {false [1 3], true [6 8]}))
-    (is (= (c/my-group-by #(apply / %) [[1 2] [2 4] [4 6] [3 6]])
-           {1/2 [[1 2] [2 4] [3 6]], 2/3 [[4 6]]}))
+    ;; Clojurescript doesn't support ratios.
+    #?(:clj
+       (is (= (c/my-group-by #(apply / %) [[1 2] [2 4] [4 6] [3 6]])
+              {1/2 [[1 2] [2 4] [3 6]], 2/3 [[4 6]]})))
     (is (= (c/my-group-by count [[1] [1 2] [3] [1 2 3] [2 3]])
            {1 [[1] [3]], 2 [[1 2] [2 3]], 3 [[1 2 3]]}))))
 
@@ -466,9 +469,11 @@
   (testing "Least Common Multiple"
     (is (== (c/lcm 2 3) 6))
     (is (== (c/lcm 5 3 7) 105))
-    (is (== (c/lcm 1/3 2/5) 2))
-    (is (== (c/lcm 3/4 1/6) 3/2))
-    (is (== (c/lcm 7 5/7 2 3/5) 210))))
+    ;; ClojureScript doesn't support ratios
+    #?(:clj (do
+              (is (== (c/lcm 1/3 2/5) 2))
+              (is (== (c/lcm 3/4 1/6) 3/2))
+              (is (== (c/lcm 7 5/7 2 3/5) 210))))))
 
 (deftest easy-107
   (testing "Simple closures"
@@ -504,10 +509,12 @@
     (is (= 1365  (c/binary-value "10101010101")))
     (is (= 65535 (c/binary-value "1111111111111111")))))
 
-(deftest easy-126
-  (testing "Through the Looking Class"
-    (is (let [x Class]
-          (and (= (class x) x) x)))))
+;; Not solvable in clojurescript
+#?(:clj
+   (deftest easy-126
+     (testing "Through the Looking Class"
+       (is (let [x Class]
+             (and (= (class x) x) x))))))
 
 (deftest easy-128
   (testing "Recognize Playing Cards"
@@ -550,6 +557,10 @@
     (is (= (second (c/pascal-seq [2 3 2])) [2 5 5 2]))
     (is (= (take 5 (c/pascal-seq [1])) [[1] [1 1] [1 2 1] [1 3 3 1] [1 4 6 4 1]]))
     (is (= (take 2 (c/pascal-seq [3 1 2])) [[3 1 2] [3 4 3 2]]))
+    ;; In assert below Clojure autopromotes int to BigInt.
+    ;; In ClojureScript it is not done, Number type is used all the time.
+    ;; ClojureScript output is other than in Clojure (other representation
+    ;; of big numbers). Despite of that the assert works.
     (is (= (take 100 (c/pascal-seq [2 4 2])) (rest (take 101 (c/pascal-seq [2 2])))))))
 
 (deftest easy-153
@@ -576,23 +587,27 @@
                      #{#{:x :y :z} #{:x :y} #{:z} #{}}
                      #{'[:x :y :z] [:x :y] [:z] [] {}}})
            false))
-    (is (= (c/f153 #{#{(= "true") false}
-                     #{:yes :no}
-                     #{(class 1) 0}
-                     #{(symbol "true") 'false}
-                     #{(keyword "yes") ::no}
-                     #{(class '1) (int \0)}})
-           false))
+    ;; ClojureScript don't have class function
+    #?(:clj
+       (is (= (c/f153 #{#{(= "true") false}
+                        #{:yes :no}
+                        #{(class 1) 0}
+                        #{(symbol "true") 'false}
+                        #{(keyword "yes") ::no}
+                        #{(class '1) (int \0)}})
+              false)))
     (is (= (c/f153 #{#{distinct?}
                      #{#(-> %) #(-> %)}
                      #{#(-> %) #(-> %) #(-> %)}
                      #{#(-> %) #(-> %) #(-> %)}})
            true))
-    (is (= (c/f153 #{#{(#(-> *)) + (quote mapcat) #_ nil}
-                     #{'+ '* mapcat (comment mapcat)}
-                     #{(do) set contains? nil?}
-                     #{, , , #_, , empty?}})
-           false))))
+    ;; ClojureScript don't have functions: '+ '*
+    #?(:clj
+       (is (= (c/f153 #{#{(#(-> *)) + (quote mapcat) #_ nil}
+                        #{'+ '* mapcat (comment mapcat)}
+                        #{(do) set contains? nil?}
+                        #{, , , #_, , empty?}})
+              false)))))
 
 (deftest easy-157
   (testing "Indexing Sequences"
@@ -839,8 +854,9 @@
 (deftest medium-108
   (testing "Lazy Searching"
     (is (= 3 (c/f108 [3 4 5])))
-    (is (= 4 (c/f108 [1 2 3 4 5 6 7] [0.5 3/2 4 19])))
-    (is (= 7 (c/f108 (range) (range 0 100 7/6) [2 3 5 7 11 13])))
+    #?(:clj (do
+              (is (= 4 (c/f108 [1 2 3 4 5 6 7] [0.5 3/2 4 19])))
+              (is (= 7 (c/f108 (range) (range 0 100 7/6) [2 3 5 7 11 13])))))
     (is (= 64 (c/f108 (map #(* % % %) (range)) ;; perfect cubes
                       (filter #(zero? (bit-and % (dec %))) (range)) ;; powers of 2
                       (iterate inc 20)))))) ;; at least as large as 20
@@ -962,7 +978,9 @@
     (is (= [0] (c/digits 0 11)))
     (is (= [1 0 0 1] (c/digits 9 2)))
     (is (= [1 0] (let [n (rand-int 100000)](c/digits n n))))
-    (is (= [16 18 5 24 15 1] (c/digits Integer/MAX_VALUE 42)))))
+    ;; Integer/MAX_VALUE won't work in ClojureScript
+    #?(:clj
+       (is (= [16 18 5 24 15 1] (c/digits Integer/MAX_VALUE 42))))))
 
 (deftest medium-141
   (testing "Tricky card games"
@@ -989,12 +1007,15 @@
     (is (= 23 (c/f148 10 3 5)))
     (is (= 233168 (c/f148 1000 3 5)))
     (is (= "2333333316666668" (str (c/f148 100000000 3 5))))
-    (is (= "110389610389889610389610"
-           (str (c/f148 (* 10000 10000 10000) 7 11))))
-    (is (= "1277732511922987429116"
-           (str (c/f148 (* 10000 10000 10000) 757 809))))
-    (is (= "4530161696788274281"
-           (str (c/f148 (* 10000 10000 1000) 1597 3571))))))
+    ;; Above asserts requires auto-promote to BigInt upon overflow.
+    ;; JavaScript Number type doesn't have enough precision for it.
+    #?(:clj (do
+              (is (= "110389610389889610389610"
+                     (str (c/f148 (* 10000 10000 10000) 7 11))))
+              (is (= "1277732511922987429116"
+                     (str (c/f148 (* 10000 10000 10000) 757 809))))
+              (is (= "4530161696788274281"
+                     (str (c/f148 (* 10000 10000 1000) 1597 3571))))))))
 
 (deftest medium-150
   (testing "Palindromic Numbers"
@@ -1059,19 +1080,21 @@
             [25 30 35 40 45 50 55]
             [30 36 42 48 54 60 66]
             [35 42 49 56 63 70 77]]))
-    (is (= (c/infinite-matrix #(/ % (inc %2)) 1 0 6 4)
-           [[1/1 1/2 1/3 1/4]
-            [2/1 2/2 2/3 1/2]
-            [3/1 3/2 3/3 3/4]
-            [4/1 4/2 4/3 4/4]
-            [5/1 5/2 5/3 5/4]
-            [6/1 6/2 6/3 6/4]]))
-    (is (= (class (c/infinite-matrix (juxt bit-or bit-xor)))
-           (class (c/infinite-matrix (juxt quot mod) 13 21))
-           (class (lazy-seq))))
-    (is (= (class (nth (c/infinite-matrix (constantly 10946)) 34))
-           (class (nth (c/infinite-matrix (constantly 0) 5 8) 55))
-           (class (lazy-seq))))
+    ;; There is no class function in Clojurescript and no support of ratio numbers
+    #?(:clj (do
+              (is (= (c/infinite-matrix #(/ % (inc %2)) 1 0 6 4)
+                     [[1/1 1/2 1/3 1/4]
+                      [2/1 2/2 2/3 1/2]
+                      [3/1 3/2 3/3 3/4]
+                      [4/1 4/2 4/3 4/4]
+                      [5/1 5/2 5/3 5/4]
+                      [6/1 6/2 6/3 6/4]]))
+              (is (= (class (c/infinite-matrix (juxt bit-or bit-xor)))
+                     (class (c/infinite-matrix (juxt quot mod) 13 21))
+                     (class (lazy-seq))))
+              (is (= (class (nth (c/infinite-matrix (constantly 10946)) 34))
+                     (class (nth (c/infinite-matrix (constantly 0) 5 8) 55))
+                     (class (lazy-seq))))))
     (is (= (let [m 377 n 610 w 987
                  check (fn [f s] (every? true? (map-indexed f s)))
                  row (take w (nth (c/infinite-matrix vector) m))
@@ -1111,7 +1134,9 @@
     (is (= [#{""} #{"()"} #{"()()" "(())"}] (map (fn [n] (c/f195 n)) [0 1 2])))
     (is (= #{"((()))" "()()()" "()(())" "(())()" "(()())"} (c/f195 3)))
     (is (= 16796 (count (c/f195 10))))
-    (is (= (nth (sort (filter #(.contains ^String % "(()()()())") (c/f195 9))) 6) "(((()()()())(())))"))
+    ;; Function contains won't work in ClojureScript
+    #?(:clj
+       (is (= (nth (sort (filter #(.contains ^String % "(()()()())") (c/f195 9))) 6) "(((()()()())(())))")))
     (is (= (nth (sort (c/f195 12)) 5000) "(((((()()()()()))))(()))"))))
 
 (deftest hard-73
@@ -1285,15 +1310,17 @@
                                     "_ _ o _ _ _ _"
                                     "_ _ f _ # _ _"])))))
 
-(deftest hard-113
-  (testing "Making Data Dance"
-    (is (= "1, 2, 3" (str (c/f113 2 1 3))))
-    (is (= '(2 1 3) (seq (c/f113 2 1 3))))
-    (is (= '(2 1 3) (seq (c/f113 2 1 3 3 1 2))))
-    (is (= '(1) (seq (apply c/f113 (repeat 5 1)))))
-    (is (= "1, 1, 1, 1, 1" (str (apply c/f113 (repeat 5 1)))))
-    (is (and (= nil (seq (c/f113)))
-             (=  "" (str (c/f113)))))))
+;; This seems not solvable in ClojureScript.
+#?(:clj
+   (deftest hard-113
+     (testing "Making Data Dance"
+       (is (= "1, 2, 3" (str (c/f113 2 1 3))))
+       (is (= '(2 1 3) (seq (c/f113 2 1 3))))
+       (is (= '(2 1 3) (seq (c/f113 2 1 3 3 1 2))))
+       (is (= '(1) (seq (apply c/f113 (repeat 5 1)))))
+       (is (= "1, 1, 1, 1, 1" (str (apply c/f113 (repeat 5 1)))))
+       (is (and (= nil (seq (c/f113)))
+                (=  "" (str (c/f113))))))))
 
 (deftest hard-117
   (testing "For Science!"

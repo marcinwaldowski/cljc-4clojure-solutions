@@ -128,18 +128,21 @@
           coll ))
 
 (defn binary-value [s]
-  (loop [res    0
-         weight 1
-         s      (reverse s)]
-    (if (empty? s)
-      res
-      (recur (->> (first s)
-                  str
-                  Integer/parseInt
-                  (* weight)
-                  (+ res))
-             (* weight 2)
-             (rest s)))))
+  (letfn [(str->int [s]
+            #?(:clj  (Integer/parseInt s)
+               :cljs (js/parseInt s)))]
+    (loop [res    0
+           weight 1
+           s      (reverse s)]
+      (if (empty? s)
+        res
+        (recur (->> (first s)
+                    str
+                    str->int
+                    (* weight)
+                    (+ res))
+               (* weight 2)
+               (rest s))))))
 
 (defn symmetric-diff [a b]
   (clojure.set/difference (clojure.set/union a b) (clojure.set/intersection a b)))
@@ -229,8 +232,10 @@
     (reduce lcm xs)))
 
 (defn pascal-seq [coll]
-  (iterate #(mapv +' (cons 0 %) (conj % 0))
-           coll))
+  (let [+' #?(:clj  +'
+              :cljs +)]
+    (iterate #(mapv +' (cons 0 %) (conj % 0))
+             coll)))
 
 (defn symmetric-tree? [tree]
   (let [walk (fn walk [node mirror]
@@ -343,9 +348,12 @@
   (letfn [(perfect-square? [n]
             (let [d (Math/sqrt n)
                   i (double (int d))]
-              (= d i)))]
+              (= d i)))
+          (str->int [s]
+            #?(:clj  (Integer/parseInt s)
+               :cljs (js/parseInt s)))]
     (->> (re-seq #"\d+" s)
-         (map #(Integer/parseInt %))
+         (map str->int)
          (filter perfect-square?)
          (interpose ",")
          (apply str))))
@@ -691,11 +699,15 @@
       (apply f (map lookup args)))))
 
 (defn f148 [n c1 c2]
-  (letfn [(arithmetic-series [first-val up-to]
-            (let [c (quot (dec up-to) first-val)]
-              (/ (+' (*' c first-val)
-                     (*' c c first-val))
-                 2)))]
+  (let [+' #?(:clj +'
+              :cljs +)
+        *' #?(:clj *'
+              :cljs *)
+        arithmetic-series (fn [first-val up-to]
+                            (let [c (quot (dec up-to) first-val)]
+                              (/ (+' (*' c first-val)
+                                     (*' c c first-val))
+                                 2)))]
     (- (+' (arithmetic-series c1 n)
            (arithmetic-series c2 n))
        (arithmetic-series (*' c1 c2) n))))
@@ -1058,61 +1070,67 @@
                        (into seen next-coord))))))))))
 
 (defn palindromic-seq [from]
-  (letfn [(reverse-num [n]
-            (loop [r 0 n n]
-              (if (zero? n)
-                r
-                (recur (+ (* r 10) (rem n 10))
-                       (quot n 10)))))
-          (num-of-digits [n]
-            (if (zero? n)
-              1
+  (let [+' #?(:clj +'
+              :cljs +)
+        *' #?(:clj *'
+              :cljs *)]
+    (letfn [(reverse-num [n]
               (loop [r 0 n n]
                 (if (zero? n)
                   r
-                  (recur (inc r)
-                         (quot n 10))))))
-          (state->num [[cur-val parity max-val]]
-            (condp = parity
-              :o (+' (*' max-val
-                         (quot cur-val 10))
-                     (reverse-num cur-val))
-              :e (+' (*' max-val
-                         cur-val)
-                     (reverse-num cur-val))))
-          (num->state [n]
-            (let [nd      (num-of-digits n)
-                  parity  (if (odd? nd) :o :e)
-                  half-nd (if (= parity :o)
-                            (inc (quot nd 2))
-                            (quot nd 2))
-                  max-val (reduce *' (repeat half-nd 10))
-                  cur-val (if (= parity :o)
-                            (quot n (quot max-val 10))
-                            (quot n max-val))
-                  cur-val (if (< (state->num [cur-val parity max-val]) n)
-                            (inc cur-val)
-                            cur-val)]
-              [cur-val parity max-val]))
-          (next-state [[cur-val parity max-val]]
-            (let [new-val (inc cur-val)]
-              (if (< new-val max-val)
-                [new-val parity max-val]
-                (if (= parity :o)
-                  [(quot max-val 10) :e max-val]
-                  [max-val :o (*' max-val 10)]))))
-          (next-palindromic-seq [state]
-            (lazy-seq (cons (state->num state)
-                            (next-palindromic-seq (next-state state)))))]
-    (next-palindromic-seq (num->state from))))
+                  (recur (+ (* r 10) (rem n 10))
+                         (quot n 10)))))
+            (num-of-digits [n]
+              (if (zero? n)
+                1
+                (loop [r 0 n n]
+                  (if (zero? n)
+                    r
+                    (recur (inc r)
+                           (quot n 10))))))
+            (state->num [[cur-val parity max-val]]
+              (condp = parity
+                :o (+' (*' max-val
+                           (quot cur-val 10))
+                       (reverse-num cur-val))
+                :e (+' (*' max-val
+                           cur-val)
+                       (reverse-num cur-val))))
+            (num->state [n]
+              (let [nd      (num-of-digits n)
+                    parity  (if (odd? nd) :o :e)
+                    half-nd (if (= parity :o)
+                              (inc (quot nd 2))
+                              (quot nd 2))
+                    max-val (reduce *' (repeat half-nd 10))
+                    cur-val (if (= parity :o)
+                              (quot n (quot max-val 10))
+                              (quot n max-val))
+                    cur-val (if (< (state->num [cur-val parity max-val]) n)
+                              (inc cur-val)
+                              cur-val)]
+                [cur-val parity max-val]))
+            (next-state [[cur-val parity max-val]]
+              (let [new-val (inc cur-val)]
+                (if (< new-val max-val)
+                  [new-val parity max-val]
+                  (if (= parity :o)
+                    [(quot max-val 10) :e max-val]
+                    [max-val :o (*' max-val 10)]))))
+            (next-palindromic-seq [state]
+              (lazy-seq (cons (state->num state)
+                              (next-palindromic-seq (next-state state)))))]
+      (next-palindromic-seq (num->state from)))))
 
-(defn f113 [& coll]
-  (reify
-    clojure.lang.Seqable
-    (toString [_]
-      (apply str (interpose ", " (sort coll))))
-    (seq [_]
-      (seq (distinct coll)))))
+;; This seems not solvable in ClojureScript.
+#?(:clj
+   (defn f113 [& coll]
+     (reify
+       clojure.lang.Seqable
+       (toString [_]
+         (apply str (interpose ", " (sort coll))))
+       (seq [_]
+         (seq (distinct coll))))))
 
 (defn infinite-matrix
   ([f]
