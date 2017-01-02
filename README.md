@@ -189,6 +189,28 @@ Proceed the same way as with Node.js REPL but run `(start-nashorn)` instead of `
 
 Proceed the same way as with Node.js REPL but run `(start-rhino)` instead of `(start-node)`.
 
+### Running tests with Planck
+
+Make sure [Planck](https://github.com/mfikes/planck) is correctly installed:
+
+```sh
+$ planck -h
+```
+
+Run planck with:
+
+```sh
+planck -c src:test
+```
+
+In planck execute:
+
+```clojure
+(require '[clojure.test :as t])
+(require 'cljc-4clojure-solutions.core-test)
+(t/run-tests 'cljc-4clojure-solutions.core-test)
+```
+
 ## License
 
 Distributed under the Eclipse Public License version 1.0
