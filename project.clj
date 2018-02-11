@@ -7,11 +7,11 @@
   ;; Required support for reader conditional files (cljc)
   :min-lein-version "2.5.2"
 
-  :dependencies [[org.clojure/clojure "1.8.0"]
-                 [org.clojure/clojurescript "1.9.36"]]
+  :dependencies [[org.clojure/clojure "1.9.0"]
+                 [org.clojure/clojurescript "1.9.946"]]
 
-  :plugins [[lein-cljsbuild "1.1.3"]
-            [lein-doo "0.1.6"]]
+  :plugins [[lein-cljsbuild "1.1.7"]
+            [lein-doo "0.1.8"]]
 
   :clean-targets ^{:protect false} [:target-path "resources/private/js/" "nashorn_code_cache" "out"]
 
@@ -56,7 +56,7 @@
                        :pretty-print  true}}}}
 
   :profiles {:dev {:source-paths ["dev"]
-                   :dependencies [[doo "0.1.6"]
-                                  [com.cemerick/piggieback "0.2.1"]
+                   :dependencies [[doo "0.1.8"]
+                                  [com.cemerick/piggieback "0.2.2"]
                                   [weasel "0.7.0" :exclusions [org.clojure/clojurescript]]]
                    :repl-options {:nrepl-middleware [cemerick.piggieback/wrap-cljs-repl]}}})

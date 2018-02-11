@@ -61,7 +61,7 @@ Make sure [PhantomJS](http://phantomjs.org/) is correctly installed:
 
 ```sh
 $ phantomjs -v
-2.1.1
+2.1.3-dev-release
 ```
 
 Execute command:
@@ -78,7 +78,7 @@ Make sure [Node.js](http://nodejs.org) is correctly installed:
 
 ```sh
 $ node -v
-v4.4.5
+v8.9.4
 ```
 
 Execute command:
@@ -212,5 +212,7 @@ In planck execute:
 ```
 
 ## License
+
+Copyright © 2018 Marcin Waldowski
 
 Distributed under the Eclipse Public License version 1.0
